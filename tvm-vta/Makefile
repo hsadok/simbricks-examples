@@ -1,7 +1,7 @@
 PACKER_VERSION := 1.7.0
 
 IMAGE := output-tvm/tvm
-VTA_DIR := vta_src/simbricks
+VTA_DIR := tvm-simbricks/3rdparty/vta-hw/simbricks
 VTA := $(VTA_DIR)/vta_simbricks
 
 all: experiment_requirements
