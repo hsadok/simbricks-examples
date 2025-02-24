@@ -3,3 +3,7 @@
 **output-*
 **out/
 **__pycache__
+
+# Ignoring output files.
+**.pcap
+**.csv
