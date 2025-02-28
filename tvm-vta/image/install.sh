@@ -30,7 +30,9 @@ apt-get -y install \
     cmake \
     libedit-dev \
     libxml2-dev \
-    llvm-dev
+    llvm-dev \
+    rsync \
+    gdb
 
 # build tvm
 mkdir -p /root
