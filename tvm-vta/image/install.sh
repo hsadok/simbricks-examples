@@ -73,5 +73,4 @@ wget -O person.jpg ${REPO_URL}data/person.jpg?raw=true
 wget -O scream.jpg ${REPO_URL}data/scream.jpg?raw=true
 
 # compile library for Darknet model with TVM
-export PYTHONPATH=/root/tvm/python:/root/tvm/vta/python
 python3 /root/tvm/vta/tutorials/frontend/deploy_detection-compile_lib.py $DARKNET_DIR
