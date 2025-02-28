@@ -3,4 +3,4 @@
 	url = https://github.com/simbricks/jpeg_decoder.git
 [submodule "tvm-vta/tvm-simbricks"]
 	path = tvm-vta/tvm-simbricks
-	url = https://github.com/simbricks/tvm-simbricks.git
+	url = https://github.com/hsadok/tvm-simbricks.git
