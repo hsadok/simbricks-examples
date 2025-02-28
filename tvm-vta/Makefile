@@ -9,7 +9,8 @@ all: experiment_requirements
 %.raw: %
 	qemu-img convert -f qcow2 -O raw $< $@
 
-$(IMAGE): packer image/image.pkr.hcl image/install.sh image/cleanup.sh
+$(IMAGE): packer image/image.pkr.hcl image/install.sh image/cleanup.sh \
+		tvm-simbricks/vta/tutorials/frontend/deploy_detection-compile_lib.py
 	rm -rf $(dir $@)
 	git submodule init
 	git submodule update --recursive
