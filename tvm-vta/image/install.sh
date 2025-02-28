@@ -41,6 +41,8 @@ cp 3rdparty/vta-hw/config/simbricks_pci_sample.json 3rdparty/vta-hw/config/vta_c
 mkdir build
 cp cmake/config.cmake build
 cd build
+echo "set(CMAKE_BUILD_TYPE RelWithDebInfo)" >> config.cmake
+echo "set(USE_CPP_RTVM ON)" >> config.cmake
 cmake ..
 make -j`nproc`
 
