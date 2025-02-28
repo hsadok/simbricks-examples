@@ -61,6 +61,11 @@ build {
     destination = "/tmp/input"
   }
 
+  provisioner "file" {
+    source      = "tvm-simbricks"
+    destination = "/tmp/tvm-simbricks"
+  }
+
   provisioner "shell" {
     execute_command = "{{ .Vars }} http_proxy=${var.http_proxy} https_proxy=${var.https_proxy} sudo -S -E bash '{{ .Path }}'"
     scripts         = ["image/install.sh", "image/cleanup.sh"]
