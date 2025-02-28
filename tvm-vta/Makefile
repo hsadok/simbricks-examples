@@ -11,6 +11,8 @@ all: experiment_requirements
 
 $(IMAGE): packer image/image.pkr.hcl image/install.sh image/cleanup.sh
 	rm -rf $(dir $@)
+	git submodule init
+	git submodule update --recursive
 	mkdir -p input-tvm
 	./packer build -var="syscores=`nproc`" \
 		-var="http_proxy=$$http_proxy" -var="https_proxy=$$https_proxy" \
