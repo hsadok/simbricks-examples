@@ -39,6 +39,7 @@ mkdir -p /root
 mv /tmp/tvm-simbricks /root/tvm
 cd /root/tvm
 cp 3rdparty/vta-hw/config/simbricks_pci_sample.json 3rdparty/vta-hw/config/vta_config.json
+rm -rf build
 mkdir build
 cp cmake/config.cmake build
 cd build
