@@ -26,7 +26,6 @@ apt-get -y install \
     python3-tornado \
     libtinfo-dev \
     zlib1g-dev \
-    build-essential \
     cmake \
     libedit-dev \
     libxml2-dev \
