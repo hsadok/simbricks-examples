@@ -74,3 +74,14 @@ wget -O scream.jpg ${REPO_URL}data/scream.jpg?raw=true
 
 # compile library for Darknet model with TVM
 python3 /root/tvm/vta/tutorials/frontend/deploy_detection-compile_lib.py $DARKNET_DIR
+
+# Enso
+apt-get -y install libnuma-dev
+
+cd /root/
+git clone https://github.com/crossroadsfpga/enso
+cd /root/enso
+git checkout simbricks
+
+./setup.sh --no-quartus
+./scripts/sw_setup.sh 16384 32768 true
