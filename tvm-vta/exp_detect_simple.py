@@ -10,7 +10,6 @@ import simbricks.orchestration.experiment.experiment_environment as env
 import exp_util
 import itertools
 import os
-import tarfile
 
 experiments = []
 
@@ -49,8 +48,6 @@ for host_var, inference_device, vta_clk_freq in itertools.product(
             super().__init__()
             self.pci_device_id = pci_device_id
             self.device = inference_device
-            self.test_img = "person.jpg"
-            self.repetitions = 1
             self.debug = False
             """Whether to dump inference result."""
 
@@ -58,13 +55,15 @@ for host_var, inference_device, vta_clk_freq in itertools.product(
             # define commands to run on simulated server
             cmds = [
                 "ls -al /root/darknet",
+                "cd /root/tvm/build/",
                 (
                     f"VTA_DEVICE={self.pci_device_id} "
                     "LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH "
                     # "gdb -batch -ex \"catch syscall exit_group\" -ex \"run\" "
                     # "-ex \"bt\" -ex \"list\" --args "
-                    "/root/tvm/build/rtvm "
-                    "--model=/root/darknet --device=extdev --dump-meta"
+                    "gdb --batch -x /root/tvm/cmds.gdb --args "
+                    "/root/tvm/build/rtvm --model=/root/darknet "
+                    "--device=extdev --dump-meta --zero-copy --dry-run 0"
                 ),
             ]
 
@@ -129,95 +128,10 @@ for host_var, inference_device, vta_clk_freq in itertools.product(
             return cmds
 
     #######################################################
-    # Define server configuration
-    # -----------------------------------------------------
-
-    class VtaNode(node.NodeConfig):
-
-        def __init__(self) -> None:
-            super().__init__()
-            # Use locally built disk image
-            self.disk_image = os.path.abspath("./output-tvm/tvm")
-            # Bump amount of system memory
-            self.memory = 3 * 1024
-            # Reserve physical range of memory for the VTA user-space driver
-            self.kcmd_append = " memmap=512M!1G"
-
-            self.tvm_parent_dir = "/root"
-            self.local_tvm_simbricks_dir = os.path.abspath("./tvm-simbricks")
-            self.vm_mount_name = 'tvm'
-
-        def prepare_pre_cp(self):
-            # Define commands to run before application to configure the server
-            cmds = super().prepare_pre_cp()
-            if self.local_tvm_simbricks_dir is not None:
-                cmds.extend(
-                    [
-                        'ls -al /tmp/guest',
-                        # f"rm -rf {self.tvm_parent_dir}",
-                        f'mkdir -p /tmp/guest/{self.vm_mount_name}-extract',
-                        (
-                            f'tar xf /tmp/guest/{self.vm_mount_name}'
-                            f' -C /tmp/guest/{self.vm_mount_name}-extract'
-                        ),
-                        # Rsync using checksum to avoid copying files that are
-                        # not modified.
-                        f'ls -al /tmp/guest/{self.vm_mount_name}-extract',
-                        f'rsync -a --checksum'
-                        f'  /tmp/guest/{self.vm_mount_name}-extract/tvm/'
-                        f'  {self.tvm_parent_dir}/{self.vm_mount_name}',
-
-                        f'ls -al {self.tvm_parent_dir}/{self.vm_mount_name}',
-                        f'cd {self.tvm_parent_dir}/{self.vm_mount_name}',
-                        # 'touch 3rdparty/vta-hw/src/simbricks-pci/pci_driver.cc',
-                        'cd build',
-                        'make -j`nproc`',
-                    ]
-                )
-
-            cmds.extend(
-                [
-                    "mount -t proc proc /proc",
-                    "mount -t sysfs sysfs /sys",
-                    "ls -al /root",
-                    # "lspci -vv",
-                    "lspci -tvv",
-                    # Make TVM's Python framework available
-                    "export PYTHONPATH=/root/tvm/python:${PYTHONPATH}",
-                    "export PYTHONPATH=/root/tvm/vta/python:${PYTHONPATH}",
-                    # Set up loopback interface so the TVM inference script can
-                    # connect to the RPC server
-                    "ip link set lo up",
-                    "ip addr add 127.0.0.1/8 dev lo",
-                    # Make VTA device available for control from user-space via
-                    # VFIO
-                    (
-                        "echo 1"
-                        " >/sys/module/vfio/parameters/enable_unsafe_noiommu_mode"
-                    ),
-                    'echo "dead beef" >/sys/bus/pci/drivers/vfio-pci/new_id',
-                ]
-            )
-            return cmds
-
-        # pylint: disable=consider-using-with
-        def config_files(self, environment):
-            files = super().config_files(environment)
-            if self.local_tvm_simbricks_dir is not None:
-                # Tar the directory to be copied to the VM.
-                tar_path = f'/tmp/{self.vm_mount_name}.tar'
-                with tarfile.open(tar_path, 'w') as tar:
-                    tar.add(self.local_tvm_simbricks_dir, arcname='tvm')
-
-                files[self.vm_mount_name] = open(tar_path, 'rb')
-
-            return files
-
-    #######################################################
     # Define and connect all simulators
     # -----------------------------------------------------
     # Instantiate server
-    server_cfg = VtaNode()
+    server_cfg = exp_util.VtaNode()
     # server_cfg.app = TvmDetectLocal()
     server_cfg.app = TvmDetectLocalCpp()
     server = HostClass(server_cfg)
